@@ -22,7 +22,7 @@ const I18N = {
     brandDesc: "专注于 Logo 生成和图片隐私保护。",
     nav: {
       home: "首页",
-      logoTools: "开发者Logo 工具",
+      logoTools: "开发者 Logo 工具",
       privacyTools: "图片隐私清洗工具",
       resources: "资源中心"
     },
