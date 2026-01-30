@@ -7,7 +7,11 @@ import {
   Zap, Server, Smartphone, MapPin, Calendar, Search, 
   Box, Circle, Square, Command, Activity, Upload, RefreshCw,
   BookOpen, Clock, Tag, ArrowLeft, Info, Check, XCircle,
-  Copy, Settings, Monitor, Share2, Map as MapIcon, Languages, Home
+  Copy, Settings, Monitor, Share2, Map as MapIcon, Languages, Home,
+  // === 新增的酷炫图标 ===
+  Bot, Bug, Cloud, Database, Flame, Gamepad2, Ghost, 
+  Infinity, Network, Puzzle, Rocket, Sparkles, Fingerprint, 
+  Anchor, Aperture, Feather, Radio
 } from 'lucide-react';
 
 // ==========================================
@@ -18,13 +22,12 @@ const I18N = {
     brandDesc: "专注于 Logo 生成和图片隐私保护。",
     nav: {
       home: "首页",
-      logoTools: "Logo 工具",
-      privacyTools: "隐私工具",
+      logoTools: "开发者Logo 工具",
+      privacyTools: "图片隐私清洗工具",
       resources: "资源中心"
     },
     home: {
       heroTitle: "BitShell",
-      heroTitleSuffix: "瑞士军刀",
       heroDesc: "从极客风格的 Logo 设计，到彻底的图片隐私清洗。BitShell 为开发者和注重隐私的用户提供纯前端、无服务器的安全工具。",
       btnLogo: "开始设计 Logo",
       btnPrivacy: "清理图片隐私",
@@ -83,7 +86,6 @@ const I18N = {
     },
     home: {
       heroTitle: "The Developer's",
-      heroTitleSuffix: "Swiss Knife",
       heroDesc: "From geek-style Logo design to thorough image privacy scrubbing. BitShell provides client-side, serverless secure tools for developers.",
       btnLogo: "Create Logo",
       btnPrivacy: "Scrub Privacy",
@@ -265,7 +267,6 @@ const LandingPage = ({ onNavigate, lang }) => {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[85vh] animate-fade-in px-4">
-      {/* Brand Hero - 修正版：长方形 Logo 自适应 + 完整显示 */}
       <div className="mb-10 relative group cursor-default flex justify-center">
         <div className="absolute -inset-2 bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl blur-xl opacity-30 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
         <div className="relative">
@@ -279,7 +280,6 @@ const LandingPage = ({ onNavigate, lang }) => {
         </div>
       </div>
 
-      {/* 原来的大标题已删除 */}
       
       <p className="text-slate-400 text-lg md:text-xl max-w-2xl mb-12 text-center leading-relaxed">
         {t.heroDesc}
@@ -350,12 +350,48 @@ const LogoGeneratorEngine = ({ pageConfig, lang }) => {
   };
 
   const iconLibrary = [
-    { key: 'terminal', icon: Terminal }, { key: 'code', icon: Code },
-    { key: 'github', icon: Github }, { key: 'git', icon: Zap },
-    { key: 'cpu', icon: Cpu }, { key: 'coffee', icon: Coffee },
-    { key: 'hash', icon: Hash }, { key: 'globe', icon: Globe },
-    { key: 'server', icon: Server }, { key: 'lock', icon: Lock },
-    { key: 'command', icon: Command }, { key: 'activity', icon: Activity }
+    // === 基础/终端 ===
+    { key: 'terminal', icon: Terminal }, 
+    { key: 'code', icon: Code },
+    { key: 'command', icon: Command },
+    { key: 'hash', icon: Hash },
+    
+    // === 开发/代码 ===
+    { key: 'github', icon: Github }, 
+    { key: 'git', icon: Zap },
+    { key: 'bug', icon: Bug },          // 新增：Bug
+    { key: 'puzzle', icon: Puzzle },    // 新增：插件/拼图
+    { key: 'box', icon: Box },          // 修复：之前几何预设用了 box 但这里没定义
+
+    // === 架构/云端 ===
+    { key: 'cpu', icon: Cpu }, 
+    { key: 'server', icon: Server }, 
+    { key: 'database', icon: Database }, // 新增：数据库
+    { key: 'cloud', icon: Cloud },       // 新增：云服务
+    { key: 'network', icon: Network },   // 新增：网络/节点
+    { key: 'globe', icon: Globe },
+    
+    // === 极客/生活 ===
+    { key: 'coffee', icon: Coffee },
+    { key: 'game', icon: Gamepad2 },     // 新增：游戏手柄
+    { key: 'rocket', icon: Rocket },     // 新增：发布/火箭
+    { key: 'bot', icon: Bot },           // 新增：机器人/AI
+    { key: 'radio', icon: Radio },       // 新增：信号/广播
+
+    // === 抽象/艺术 ===
+    { key: 'activity', icon: Activity },
+    { key: 'layers', icon: Layers },     // 新增：图层/全栈
+    { key: 'sparkles', icon: Sparkles }, // 新增：AI/魔法
+    { key: 'infinity', icon: Infinity }, // 新增：DevOps/无限
+    { key: 'feather', icon: Feather },   // 新增：轻量级
+    { key: 'aperture', icon: Aperture }, // 新增：光圈/科技
+
+    // === 安全/隐私 ===
+    { key: 'lock', icon: Lock }, 
+    { key: 'shield', icon: Shield },
+    { key: 'ghost', icon: Ghost },       // 新增：幽灵/隐私
+    { key: 'fingerprint', icon: Fingerprint }, // 新增：指纹/ID
+    { key: 'anchor', icon: Anchor },     // 新增：锚点/Hook
   ];
 
   const [step, setStep] = useState(1);
@@ -944,18 +980,18 @@ const PrivacyEngine = ({ pageConfig, lang }) => {
                             }
                         </span>
                      </div>
-                     {/* Show Software info if checker mode or risk found */}
-                     {isChecker && (
-                        <div className="p-4 flex justify-between items-center">
-                            <span className="text-slate-300 flex items-center gap-3"><Code size={18} className="text-slate-500"/> {t.itemSoftware}</span>
-                            <span>
-                                {hasRisk && riskDetails.software ? 
-                                    <span className="text-orange-400 text-sm font-medium font-mono text-right block max-w-[150px] truncate" title={exifData?.software}>{exifData?.software}</span> : 
-                                    <span className="text-slate-500 text-sm">{t.notFound}</span>
-                                }
-                            </span>
-                        </div>
-                     )}
+                     
+                     {/* 修改：移除 isChecker 判断，让所有工具都显示软件信息 */}
+                     <div className="p-4 flex justify-between items-center">
+                        <span className="text-slate-300 flex items-center gap-3"><Code size={18} className="text-slate-500"/> {t.itemSoftware}</span>
+                        <span>
+                            {hasRisk && riskDetails.software ? 
+                                <span className="text-orange-400 text-sm font-medium font-mono text-right block max-w-[150px] truncate" title={exifData?.software}>{exifData?.software}</span> : 
+                                <span className="text-slate-500 text-sm">{t.notFound}</span>
+                            }
+                        </span>
+                     </div>
+
                    </div>
                 </div>
 
@@ -1097,6 +1133,13 @@ const BlogEngine = ({ pageConfig, lang }) => {
 // 6. 主程序：App
 // ==========================================
 export default function App() {
+  useEffect(() => {
+    const targetDomain = 'bs.kksm.qzz.io'; 
+    if (window.location.hostname.includes('pages.dev')) {
+      window.location.replace(`https://${targetDomain}${window.location.pathname}${window.location.search}`);
+    }
+  }, []);
+
   const [currentPath, setCurrentPath] = useState('home'); 
   const [lang, setLang] = useState('zh'); 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
