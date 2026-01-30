@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { BrowserRouter, Routes, Route, Link, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { Helmet, HelmetProvider } from 'react-helmet-async';
 import { 
   Terminal, Shield, Download, Code, Image as ImageIcon, 
   Type, Palette, Layers, AlertTriangle, CheckCircle, 
@@ -8,10 +10,9 @@ import {
   Box, Circle, Square, Command, Activity, Upload, RefreshCw,
   BookOpen, Clock, Tag, ArrowLeft, Info, Check, XCircle,
   Copy, Settings, Monitor, Share2, Map as MapIcon, Languages, Home,
-  // === 新增的酷炫图标 ===
   Bot, Bug, Cloud, Database, Flame, Gamepad2, Ghost, 
   Infinity, Network, Puzzle, Rocket, Sparkles, Fingerprint, 
-  Anchor, Aperture, Feather, Radio
+  Anchor, Aperture, Feather, Radio, Mail, User
 } from 'lucide-react';
 
 // ==========================================
@@ -24,11 +25,14 @@ const I18N = {
       home: "首页",
       logoTools: "开发者 Logo 工具",
       privacyTools: "图片隐私清洗工具",
-      resources: "资源中心"
+      resources: "资源中心",
+      about: "关于我们",
+      privacy: "隐私政策",
+      contact: "联系方式"
     },
     home: {
       heroTitle: "BitShell",
-      heroDesc: "从极客风格的 Logo 设计，到彻底的图片隐私清洗。BitShell 为开发者和注重隐私的用户提供纯前端、无服务器的安全工具。",
+      heroDesc: "BitShell 为开发者和注重隐私的用户提供纯前端、无服务器的安全工具。从极客风格的 Logo 设计，到彻底的图片隐私清洗，所有操作均在您本地浏览器完成，数据永不上传。",
       btnLogo: "开始设计 Logo",
       btnPrivacy: "清理图片隐私",
       feature1Title: "极客 Logo 生成",
@@ -40,7 +44,7 @@ const I18N = {
     privacy: {
       uploadTitle: "上传图片，检测隐私信息",
       uploadDesc: "支持拖拽上传 • JPG / PNG / WebP",
-      uploadTrust: "图片将在本地处理，不会上传服务器",
+      uploadTrust: "郑重承诺：图片将在本地浏览器处理，绝对不会上传至任何服务器。",
       uploadHeic: "注：HEIC 图片请先转换为 JPG 再处理",
       scanning: "正在检测图片中的隐私信息…",
       scanningDesc: "分析位置数据、设备指纹和时间戳",
@@ -82,11 +86,14 @@ const I18N = {
       home: "Home",
       logoTools: "Logo Tools",
       privacyTools: "Privacy Tools",
-      resources: "Resources"
+      resources: "Resources",
+      about: "About",
+      privacy: "Privacy Policy",
+      contact: "Contact"
     },
     home: {
       heroTitle: "The Developer's",
-      heroDesc: "From geek-style Logo design to thorough image privacy scrubbing. BitShell provides client-side, serverless secure tools for developers.",
+      heroDesc: "BitShell provides client-side, serverless secure tools for developers. From geek-style Logo design to thorough image privacy scrubbing, everything runs locally in your browser.",
       btnLogo: "Create Logo",
       btnPrivacy: "Scrub Privacy",
       feature1Title: "Geek Logo Maker",
@@ -98,7 +105,7 @@ const I18N = {
     privacy: {
       uploadTitle: "Upload Image to Scan",
       uploadDesc: "Drag & Drop • JPG / PNG / WebP",
-      uploadTrust: "Processed locally, no server upload",
+      uploadTrust: "Commitment: Processed locally, NO server upload.",
       uploadHeic: "Note: Please convert HEIC to JPG first",
       scanning: "Detecting privacy info...",
       scanningDesc: "Analyzing location, device fingerprint, and timestamps",
@@ -145,7 +152,7 @@ const SEO_DATA = {
   },
   tools: {
     developer_logo_generator: {
-      category: "logoTools", // Matches I18N key
+      category: "logoTools", 
       icon: Terminal,
       pages: [
         { path: 'developer-logo-generator', title: "Developer Logo Generator", titleZh: "开发者 Logo 生成器" },
@@ -155,7 +162,7 @@ const SEO_DATA = {
       ]
     },
     image_privacy_protection: {
-      category: "privacyTools", // Matches I18N key
+      category: "privacyTools",
       icon: Shield,
       pages: [
         { path: 'image-privacy-protection', title: "Privacy Protection Suite", titleZh: "隐私保护套件" },
@@ -167,7 +174,7 @@ const SEO_DATA = {
   },
   resources: {
     blog: {
-      category: "resources", // Matches I18N key
+      category: "resources",
       icon: FileCode,
       pages: [
         { path: 'blog', title: "Tech & Privacy Blog", titleZh: "技术与隐私博客" }
@@ -237,11 +244,11 @@ const SEO_DATA = {
 };
 
 // ==========================================
-// 2. 基础组件：BrandIcon, LandingPage
+// 2. 基础组件
 // ==========================================
 const BrandIcon = () => {
   const [imgError, setImgError] = useState(false);
-  const userLogoPath = "./logo.jpg"; 
+  const userLogoPath = "/logo.jpg"; 
 
   if (!imgError) {
     return (
@@ -262,16 +269,152 @@ const BrandIcon = () => {
   );
 };
 
-const LandingPage = ({ onNavigate, lang }) => {
-  const t = I18N[lang].home;
+// --- 合规页面组件 (支持多语言切换) ---
+
+const PrivacyPolicy = ({ lang }) => {
+  const content = {
+    en: {
+      title: "Privacy Policy",
+      updated: "Last updated: January 29, 2026",
+      p1_title: "1. Data Processing",
+      p1_text: "BitShell operates as a client-side tool suite. All image processing (including logo generation and privacy scrubbing) occurs locally within your browser. <strong>We do not upload your images to any server.</strong>",
+      p2_title: "2. Cookies",
+      p2_text: "We use local storage to save your language preferences. We use third-party services like Google AdSense which may use cookies to serve ads based on your prior visits.",
+      p3_title: "3. Third-Party Links",
+      p3_text: "Our site may contain links to external sites (e.g., GitHub). We are not responsible for the content or privacy practices of these sites."
+    },
+    zh: {
+      title: "隐私政策",
+      updated: "最后更新：2026年1月29日",
+      p1_title: "1. 数据处理",
+      p1_text: "BitShell 是一个纯客户端工具套件。所有的图片处理（包括 Logo 生成和隐私清洗）均在您的浏览器本地进行。<strong>我们绝对不会将您的图片上传至任何服务器。</strong>",
+      p2_title: "2. Cookies",
+      p2_text: "我们使用本地存储来保存您的语言偏好。我们使用 Google AdSense 等第三方服务，它们可能会使用 Cookie 来根据您之前的访问记录展示广告。",
+      p3_title: "3. 第三方链接",
+      p3_text: "本网站可能包含指向外部网站（如 GitHub）的链接。我们不对这些网站的内容或隐私惯例负责。"
+    }
+  };
+
+  const t = content[lang];
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[85vh] animate-fade-in px-4">
+    <div className="max-w-3xl mx-auto py-12 px-6 animate-fade-in text-slate-300">
+      <Helmet><title>{t.title} - BitShell</title></Helmet>
+      <h1 className="text-3xl font-bold text-white mb-6">{t.title}</h1>
+      <div className="prose prose-invert">
+        <p>{t.updated}</p>
+        <h3>{t.p1_title}</h3>
+        <p dangerouslySetInnerHTML={{__html: t.p1_text}} />
+        <h3>{t.p2_title}</h3>
+        <p>{t.p2_text}</p>
+        <h3>{t.p3_title}</h3>
+        <p>{t.p3_text}</p>
+      </div>
+    </div>
+  );
+};
+
+const AboutPage = ({ lang }) => {
+  const content = {
+    en: {
+      title: "About BitShell",
+      desc1: "BitShell is a collection of open-source friendly tools designed for developers and privacy-conscious users.",
+      desc2: "Our mission is to provide <strong>serverless, secure, and fast</strong> utilities. Whether you are generating a logo for your new GitHub repository or cleaning sensitive metadata from a photo before sharing, BitShell ensures your data stays on your device.",
+      card1_title: "For Developers",
+      card1_desc: "Quickly create assets that look professional in README.md files and dark-mode UIs.",
+      card2_title: "For Privacy",
+      card2_desc: "Verify and sanitize digital footprints in your images without trusting a cloud provider."
+    },
+    zh: {
+      title: "关于 BitShell",
+      desc1: "BitShell 是一组专为开发者和注重隐私的用户设计的开源友好工具集。",
+      desc2: "我们的使命是提供<strong>无服务器、安全且快速</strong>的实用工具。无论您是为新的 GitHub 仓库生成 Logo，还是在分享照片前清除敏感元数据，BitShell 都能确保您的数据始终保留在您的设备上。",
+      card1_title: "为开发者设计",
+      card1_desc: "快速创建在 README.md 文件和暗色模式 UI 中看起来很专业的资产。",
+      card2_title: "为隐私护航",
+      card2_desc: "在不信任任何云服务提供商的情况下，验证并清理图片中的数字足迹。"
+    }
+  };
+
+  const t = content[lang];
+
+  return (
+    <div className="max-w-3xl mx-auto py-12 px-6 animate-fade-in text-slate-300">
+      <Helmet><title>{t.title} - BitShell</title></Helmet>
+      <div className="flex items-center gap-4 mb-6">
+          <div className="p-3 bg-blue-600/20 rounded-xl text-blue-400"><Terminal size={32}/></div>
+          <h1 className="text-3xl font-bold text-white">{t.title}</h1>
+      </div>
+      <p className="text-lg mb-4">{t.desc1}</p>
+      <p className="mb-4" dangerouslySetInnerHTML={{__html: t.desc2}} />
+      <div className="grid md:grid-cols-2 gap-4 mt-8">
+          <div className="bg-slate-800 p-6 rounded-xl border border-slate-700">
+              <h3 className="text-white font-bold mb-2 flex items-center gap-2"><Zap size={18}/> {t.card1_title}</h3>
+              <p className="text-sm text-slate-400">{t.card1_desc}</p>
+          </div>
+          <div className="bg-slate-800 p-6 rounded-xl border border-slate-700">
+              <h3 className="text-white font-bold mb-2 flex items-center gap-2"><Shield size={18}/> {t.card2_title}</h3>
+              <p className="text-sm text-slate-400">{t.card2_desc}</p>
+          </div>
+      </div>
+    </div>
+  );
+};
+
+const ContactPage = ({ lang }) => {
+  const content = {
+    en: {
+      title: "Contact Us",
+      desc: "Have questions, suggestions, or found a bug? We'd love to hear from you.",
+      emailTitle: "Email Support",
+      emailDesc: "For general inquiries and support:",
+      response: "We typically respond within 12-48 hours."
+    },
+    zh: {
+      title: "联系我们",
+      desc: "有问题、建议或者发现了 Bug？我们很乐意倾听您的意见。",
+      emailTitle: "邮件支持",
+      emailDesc: "一般咨询和技术支持请联系：",
+      response: "我们通常会在 12-48 小时内回复。"
+    }
+  };
+
+  const t = content[lang];
+
+  return (
+    <div className="max-w-3xl mx-auto py-12 px-6 animate-fade-in text-slate-300">
+      <Helmet><title>{t.title} - BitShell</title></Helmet>
+      <h1 className="text-3xl font-bold text-white mb-6">{t.title}</h1>
+      <p className="mb-8">{t.desc}</p>
+      <div className="bg-slate-800 p-8 rounded-xl border border-slate-700 flex flex-col items-center text-center">
+          <Mail size={48} className="text-blue-500 mb-4"/>
+          <h3 className="text-xl font-bold text-white mb-2">{t.emailTitle}</h3>
+          <p className="text-slate-400 mb-6">{t.emailDesc}</p>
+          <a className="text-xl font-mono text-blue-400 bg-blue-400/10 px-6 py-3 rounded-lg hover:bg-blue-400/20 transition-colors">
+              jokong201695@outlook。com
+          </a>
+          <p className="text-xs text-slate-500 mt-6">{t.response}</p>
+      </div>
+    </div>
+  );
+};
+
+const LandingPage = ({ lang }) => {
+  const t = I18N[lang].home;
+  const navigate = useNavigate();
+
+  return (
+    <div className="flex flex-col items-center justify-center min-h-[80vh] animate-fade-in px-4 py-12">
+      <Helmet>
+          <title>BitShell - Developer Tools & Privacy Suite</title>
+          <meta name="description" content={t.heroDesc} />
+      </Helmet>
+      
       <div className="mb-10 relative group cursor-default flex justify-center">
         <div className="absolute -inset-2 bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl blur-xl opacity-30 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
         <div className="relative">
           <img 
-            src="./logo.jpg" 
+            src="/logo.jpg" 
             alt="BitShell" 
             className="h-42 md:h-52 w-auto object-contain rounded-xl shadow-2xl"
             onError={(e) => {e.target.style.display='none';}} 
@@ -280,15 +423,13 @@ const LandingPage = ({ onNavigate, lang }) => {
         </div>
       </div>
 
-      
       <p className="text-slate-400 text-lg md:text-xl max-w-2xl mb-12 text-center leading-relaxed">
         {t.heroDesc}
       </p>
       
-      {/* Action Buttons */}
-      <div className="flex flex-col sm:flex-row gap-5 w-full max-w-lg">
+      <div className="flex flex-col sm:flex-row gap-5 w-full max-w-lg mb-16">
         <button 
-          onClick={() => onNavigate('developer-logo-generator')}
+          onClick={() => navigate('/tool/developer-logo-generator')}
           className="flex-1 group relative px-8 py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold text-lg shadow-lg shadow-blue-900/20 transition-all hover:-translate-y-1"
         >
           <div className="flex items-center justify-center gap-3">
@@ -298,7 +439,7 @@ const LandingPage = ({ onNavigate, lang }) => {
         </button>
         
         <button 
-          onClick={() => onNavigate('image-privacy-protection')}
+          onClick={() => navigate('/tool/image-privacy-protection')}
           className="flex-1 group relative px-8 py-4 bg-slate-800 hover:bg-slate-700 border border-slate-700 hover:border-slate-600 text-white rounded-xl font-bold text-lg transition-all hover:-translate-y-1"
         >
           <div className="flex items-center justify-center gap-3">
@@ -308,23 +449,17 @@ const LandingPage = ({ onNavigate, lang }) => {
         </button>
       </div>
 
-      {/* Trust Badges */}
-      <div className="mt-16 pt-8 border-t border-slate-800/50 flex flex-col items-center">
-        <p className="text-xs font-mono text-slate-500 uppercase tracking-widest mb-6">{t.trust}</p>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-4xl text-left">
-          <div onClick={() => onNavigate('developer-logo-generator')} className="bg-slate-800/50 p-6 rounded-xl border border-slate-800 hover:border-blue-500/30 transition-colors cursor-pointer">
-            <div className="flex items-center gap-3 mb-2 text-blue-400 font-bold">
-              <Zap size={18}/> {t.feature1Title}
-            </div>
-            <p className="text-sm text-slate-400">{t.feature1Desc}</p>
+      <div className="max-w-4xl w-full text-left space-y-12">
+          <div>
+              <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-2"><Zap className="text-blue-400"/> {t.feature1Title}</h2>
+              <p className="text-slate-400 leading-relaxed mb-4">{t.feature1Desc}</p>
+              <p className="text-slate-500 text-sm">BitShell's Logo Generator is built for modern developers. Whether you need a favicon for your SaaS, a badge for your CLI tool, or a profile picture for your bot, our tool offers a variety of tech-centric icons and presets.</p>
           </div>
-          <div onClick={() => onNavigate('image-privacy-protection')} className="bg-slate-800/50 p-6 rounded-xl border border-slate-800 hover:border-green-500/30 transition-colors cursor-pointer">
-            <div className="flex items-center gap-3 mb-2 text-green-400 font-bold">
-              <Lock size={18}/> {t.feature2Title}
-            </div>
-            <p className="text-sm text-slate-400">{t.feature2Desc}</p>
+          <div>
+              <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-2"><Lock className="text-green-400"/> {t.feature2Title}</h2>
+              <p className="text-slate-400 leading-relaxed mb-4">{t.feature2Desc}</p>
+              <p className="text-slate-500 text-sm">Digital privacy matters. Photos taken with smartphones often contain Exif metadata including precise GPS coordinates, device models, and timestamps. BitShell Privacy Suite allows you to inspect and remove this sensitive data completely client-side before sharing your images online.</p>
           </div>
-        </div>
       </div>
     </div>
   );
@@ -462,7 +597,6 @@ const LogoGeneratorEngine = ({ pageConfig, lang }) => {
   };
 
   const getIconComponent = (key, props) => {
-    // 修复：使用 SVG 原生的 image 标签，确保导出图片时图标可见
     if (customIcon) {
       return (
         <image 
@@ -535,6 +669,7 @@ const LogoGeneratorEngine = ({ pageConfig, lang }) => {
   if (step === 1) {
     return (
       <div className="max-w-2xl mx-auto animate-fade-in mt-12">
+        <Helmet><title>{pageConfig.title} - BitShell</title></Helmet>
         <div className="text-center mb-10">
            <div className="inline-flex items-center justify-center p-3 bg-blue-600/20 rounded-xl mb-4 text-blue-400">
              {pageConfig.path.includes('github') ? <Github size={32} /> : 
@@ -574,6 +709,7 @@ const LogoGeneratorEngine = ({ pageConfig, lang }) => {
   if (step === 2) {
     return (
       <div className="max-w-4xl mx-auto animate-fade-in mt-8">
+        <Helmet><title>Choose Style - {projectName} - BitShell</title></Helmet>
         <button onClick={() => setStep(1)} className="flex items-center gap-1 text-slate-500 hover:text-white mb-6 transition-colors">
           <ArrowLeft size={16} /> {lang === 'zh' ? "返回修改名称" : "Back"}
         </button>
@@ -602,6 +738,7 @@ const LogoGeneratorEngine = ({ pageConfig, lang }) => {
   // Step 3: Workspace
   return (
     <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 animate-fade-in pb-12">
+      <Helmet><title>Customize {projectName} - BitShell</title></Helmet>
       <div className="xl:col-span-4 flex flex-col gap-4">
         <div className="flex items-center gap-2 mb-2">
            <button onClick={() => setStep(2)} className="p-2 rounded hover:bg-slate-800 text-slate-400 hover:text-white"><ArrowLeft size={18}/></button>
@@ -824,10 +961,7 @@ const PrivacyEngine = ({ pageConfig, lang }) => {
   const executeClean = () => {
     setShowConfirm(false);
     setStep('cleaning');
-
-    // Give UI a moment to update
     setTimeout(() => {
-        // Attempt 1: FileReader to DataURL (most compatible way to load local images for canvas)
         const reader = new FileReader();
         
         reader.onload = (e) => {
@@ -884,6 +1018,7 @@ const PrivacyEngine = ({ pageConfig, lang }) => {
   if (step === 'upload') {
     return (
       <div className="max-w-4xl mx-auto animate-fade-in text-center mt-12">
+        <Helmet><title>{pageConfig.title} - BitShell</title></Helmet>
         <h2 className="text-3xl font-bold text-white mb-3 flex justify-center items-center gap-2"><Shield size={32} className="text-blue-500" /> {lang === 'zh' ? pageConfig.titleZh : pageConfig.title}</h2>
         <div className="border-2 border-dashed border-slate-700 bg-slate-800/50 rounded-2xl p-16 mt-8 relative">
            <input type="file" accept="image/jpeg, image/png, image/webp" onChange={handleFile} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
@@ -981,7 +1116,6 @@ const PrivacyEngine = ({ pageConfig, lang }) => {
                         </span>
                      </div>
                      
-                     {/* 修改：移除 isChecker 判断，让所有工具都显示软件信息 */}
                      <div className="p-4 flex justify-between items-center">
                         <span className="text-slate-300 flex items-center gap-3"><Code size={18} className="text-slate-500"/> {t.itemSoftware}</span>
                         <span>
@@ -1057,6 +1191,7 @@ const BlogEngine = ({ pageConfig, lang }) => {
   if (activePost) {
     return (
       <div className="max-w-3xl mx-auto animate-fade-in mt-12">
+        <Helmet><title>{activePost.title} - BitShell Blog</title></Helmet>
         <button 
           onClick={() => setActivePost(null)}
           className="flex items-center gap-2 text-blue-400 hover:text-white mb-6 text-sm font-medium transition-colors"
@@ -1091,6 +1226,7 @@ const BlogEngine = ({ pageConfig, lang }) => {
 
   return (
     <div className="max-w-5xl mx-auto animate-fade-in mt-12">
+      <Helmet><title>Tech & Privacy Blog - BitShell</title></Helmet>
       <div className="text-center mb-12">
         <h2 className="text-3xl font-bold text-white mb-4 flex justify-center items-center gap-2">
            <BookOpen size={32} className="text-blue-400" />
@@ -1130,9 +1266,14 @@ const BlogEngine = ({ pageConfig, lang }) => {
 };
 
 // ==========================================
-// 6. 主程序：App
+// 6. 主程序：App (包含路由重构)
 // ==========================================
 export default function App() {
+  const [lang, setLang] = useState('zh');
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const t = I18N[lang];
+
+  // 域名重定向
   useEffect(() => {
     const targetDomain = 'bs.kksm.qzz.io'; 
     if (window.location.hostname.includes('pages.dev')) {
@@ -1140,94 +1281,126 @@ export default function App() {
     }
   }, []);
 
-  const [currentPath, setCurrentPath] = useState('home'); 
-  const [lang, setLang] = useState('zh'); 
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
-  const getCurrentPageConfig = () => {
-    const allPages = [
-        ...SEO_DATA.tools.developer_logo_generator.pages.map(p => ({...p, category: 'logoTools'})),
-        ...SEO_DATA.tools.image_privacy_protection.pages.map(p => ({...p, category: 'privacyTools'})),
-        ...SEO_DATA.resources.blog.pages.map(p => ({...p, category: 'resources'}))
-    ];
-    return allPages.find(p => p.path === currentPath);
-  };
-
-  const pageConfig = getCurrentPageConfig();
-
-  const handleNavigate = (path) => {
-      setCurrentPath(path);
-      setMobileMenuOpen(false);
-  };
-
-  const renderContent = () => {
-    if (currentPath === 'home') return <LandingPage onNavigate={handleNavigate} lang={lang} />;
+  // 路由组件包裹器
+  const ToolRoute = ({ category }) => {
+    const location = useLocation();
+    const path = location.pathname.split('/').pop();
     
-    if (!pageConfig) return null;
-
-    if (pageConfig.category === 'logoTools') {
-      return <LogoGeneratorEngine pageConfig={pageConfig} lang={lang} />;
-    } else if (pageConfig.category === 'privacyTools') {
-      return <PrivacyEngine pageConfig={pageConfig} lang={lang} />;
-    } else {
-      return <BlogEngine pageConfig={pageConfig} lang={lang} />;
+    // 查找对应配置
+    let pageConfig = null;
+    if (category === 'logoTools') {
+        pageConfig = SEO_DATA.tools.developer_logo_generator.pages.find(p => p.path === path);
+        if(pageConfig) return <LogoGeneratorEngine pageConfig={{...pageConfig, path}} lang={lang} />;
+    } else if (category === 'privacyTools') {
+        pageConfig = SEO_DATA.tools.image_privacy_protection.pages.find(p => p.path === path);
+        if(pageConfig) return <PrivacyEngine pageConfig={{...pageConfig, path}} lang={lang} />;
     }
+    
+    return <div className="text-white text-center mt-20">Tool not found</div>;
   };
-
-  const t = I18N[lang];
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-200 font-sans flex flex-col md:flex-row selection:bg-blue-500/30">
-      <div className="md:hidden bg-slate-900 border-b border-slate-800 p-4 flex justify-between items-center sticky top-0 z-50">
-        <div className="font-bold text-white flex items-center gap-2" onClick={() => handleNavigate('home')}>
-           <BrandIcon />
-           {SEO_DATA.brand.name}
-        </div>
-        <div className="flex items-center gap-4">
-            <button onClick={() => setLang(lang === 'zh' ? 'en' : 'zh')} className="text-xs bg-slate-800 px-2 py-1 rounded text-slate-300 border border-slate-700">{lang === 'zh' ? 'EN' : '中文'}</button>
-            <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="text-white"><Menu /></button>
-        </div>
-      </div>
-      <aside className={`fixed inset-y-0 left-0 z-40 w-72 bg-slate-900 border-r border-slate-800 transform transition-transform duration-300 ease-in-out md:translate-x-0 md:static md:h-screen overflow-y-auto ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-        <div className="p-6">
-          <div className="text-xl font-bold text-white flex items-center gap-2 mb-10 tracking-tight cursor-pointer" onClick={() => handleNavigate('home')}>
-            <BrandIcon />
-            {SEO_DATA.brand.name}
+    <HelmetProvider>
+    <BrowserRouter>
+      <div className="min-h-screen bg-slate-950 text-slate-200 font-sans flex flex-col md:flex-row selection:bg-blue-500/30">
+        
+        {/* Mobile Header */}
+        <div className="md:hidden bg-slate-900 border-b border-slate-800 p-4 flex justify-between items-center sticky top-0 z-50">
+          <Link to="/" className="font-bold text-white flex items-center gap-2">
+             <BrandIcon /> {SEO_DATA.brand.name}
+          </Link>
+          <div className="flex items-center gap-4">
+              <button onClick={() => setLang(lang === 'zh' ? 'en' : 'zh')} className="text-xs bg-slate-800 px-2 py-1 rounded text-slate-300 border border-slate-700">{lang === 'zh' ? 'EN' : '中文'}</button>
+              <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="text-white"><Menu /></button>
           </div>
-          <nav className="space-y-8">
-            <div><button onClick={() => handleNavigate('home')} className={`w-full text-left px-3 py-2 text-sm rounded-lg font-bold flex items-center gap-2 ${currentPath === 'home' ? 'text-blue-400 bg-slate-800' : 'text-slate-400 hover:text-white'}`}><Home size={16}/> {t.nav.home}</button></div>
-            <div>
-               <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 px-3">{t.nav.logoTools}</h3>
-               <ul className="space-y-1">{SEO_DATA.tools.developer_logo_generator.pages.map(p => (<li key={p.path}><button onClick={() => handleNavigate(p.path)} className={`w-full text-left px-3 py-2 text-sm rounded-lg transition-all ${currentPath === p.path ? 'bg-slate-800 text-blue-400' : 'text-slate-400 hover:text-white'}`}>{lang === 'zh' ? p.titleZh : p.title}</button></li>))}</ul>
-            </div>
-            <div>
-               <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 px-3">{t.nav.privacyTools}</h3>
-               <ul className="space-y-1">{SEO_DATA.tools.image_privacy_protection.pages.map(p => (<li key={p.path}><button onClick={() => handleNavigate(p.path)} className={`w-full text-left px-3 py-2 text-sm rounded-lg transition-all ${currentPath === p.path ? 'bg-slate-800 text-blue-400' : 'text-slate-400 hover:text-white'}`}>{lang === 'zh' ? p.titleZh : p.title}</button></li>))}</ul>
-            </div>
-             <div>
-               <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 px-3">{t.nav.resources}</h3>
-               <ul className="space-y-1">{SEO_DATA.resources.blog.pages.map(p => (<li key={p.path}><button onClick={() => handleNavigate(p.path)} className={`w-full text-left px-3 py-2 text-sm rounded-lg transition-all ${currentPath === p.path ? 'bg-slate-800 text-blue-400' : 'text-slate-400 hover:text-white'}`}>{lang === 'zh' ? p.titleZh : p.title}</button></li>))}</ul>
-            </div>
-          </nav>
         </div>
-      </aside>
-      <main className="flex-1 min-h-screen bg-slate-950 overflow-y-auto relative">
-         <div className="absolute top-0 left-0 w-full h-96 bg-gradient-to-b from-blue-900/10 to-transparent pointer-events-none"></div>
-        <div className="sticky top-0 z-30 bg-slate-950/80 backdrop-blur-md border-b border-slate-800/50 px-8 py-4 flex justify-between items-center">
-           <div className="flex items-center text-xs text-slate-500 font-medium">
-             <span className="hover:text-slate-300 cursor-pointer" onClick={() => handleNavigate('home')}>{t.nav.home}</span>
-             {currentPath !== 'home' && pageConfig && (<><ChevronRight size={12} className="mx-2 text-slate-700"/><span className="text-blue-400">{lang === 'zh' ? pageConfig.titleZh : pageConfig.title}</span></>)}
-           </div>
-           <div className="hidden md:flex items-center gap-2">
-             <Globe size={14} className="text-slate-500"/>
-             <button onClick={() => setLang('zh')} className={`text-xs px-2 py-1 rounded transition-colors ${lang === 'zh' ? 'text-white bg-slate-800 font-bold' : 'text-slate-500 hover:text-slate-300'}`}>中文</button>
-             <span className="text-slate-700">/</span>
-             <button onClick={() => setLang('en')} className={`text-xs px-2 py-1 rounded transition-colors ${lang === 'en' ? 'text-white bg-slate-800 font-bold' : 'text-slate-500 hover:text-slate-300'}`}>EN</button>
-           </div>
-        </div>
-        <div className="p-4 md:p-12 max-w-6xl mx-auto relative z-10">{renderContent()}</div>
-        <footer className="border-t border-slate-800/50 mt-20 py-8 text-center"><p className="text-slate-600 text-sm">© 2026 {SEO_DATA.brand.name}. {t.brandDesc}</p></footer>
-      </main>
-    </div>
+
+        {/* Sidebar Navigation */}
+        <aside className={`fixed inset-y-0 left-0 z-40 w-72 bg-slate-900 border-r border-slate-800 transform transition-transform duration-300 ease-in-out md:translate-x-0 md:static md:h-screen overflow-y-auto ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+          <div className="p-6">
+            <Link to="/" className="text-xl font-bold text-white flex items-center gap-2 mb-10 tracking-tight cursor-pointer">
+              <BrandIcon /> {SEO_DATA.brand.name}
+            </Link>
+            <nav className="space-y-8">
+              <div><Link to="/" className="w-full text-left px-3 py-2 text-sm rounded-lg font-bold flex items-center gap-2 text-slate-400 hover:text-white"><Home size={16}/> {t.nav.home}</Link></div>
+              <div>
+                 <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 px-3">{t.nav.logoTools}</h3>
+                 <ul className="space-y-1">{SEO_DATA.tools.developer_logo_generator.pages.map(p => (<li key={p.path}><Link to={`/tool/${p.path}`} className="block w-full text-left px-3 py-2 text-sm rounded-lg text-slate-400 hover:text-white transition-all">{lang === 'zh' ? p.titleZh : p.title}</Link></li>))}</ul>
+              </div>
+              <div>
+                 <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 px-3">{t.nav.privacyTools}</h3>
+                 <ul className="space-y-1">{SEO_DATA.tools.image_privacy_protection.pages.map(p => (<li key={p.path}><Link to={`/tool/${p.path}`} className="block w-full text-left px-3 py-2 text-sm rounded-lg text-slate-400 hover:text-white transition-all">{lang === 'zh' ? p.titleZh : p.title}</Link></li>))}</ul>
+              </div>
+               <div>
+                 <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 px-3">{t.nav.resources}</h3>
+                 <ul className="space-y-1">
+                    {SEO_DATA.resources.blog.pages.map(p => (
+                      <li key={p.path}>
+                        <Link to="/blog" className="block w-full text-left px-3 py-2 text-sm rounded-lg text-slate-400 hover:text-white transition-all">
+                          {lang === 'zh' ? p.titleZh : p.title}
+                        </Link>
+                      </li>
+                    ))}
+                 </ul>
+              </div>
+            </nav>
+          </div>
+        </aside>
+
+        {/* Main Content Area */}
+        <main className="flex-1 min-h-screen bg-slate-950 overflow-y-auto relative flex flex-col">
+           <div className="absolute top-0 left-0 w-full h-96 bg-gradient-to-b from-blue-900/10 to-transparent pointer-events-none"></div>
+          
+          {/* Desktop Top Bar */}
+          <div className="sticky top-0 z-30 bg-slate-950/80 backdrop-blur-md border-b border-slate-800/50 px-8 py-4 flex justify-between items-center">
+             <div className="flex items-center text-xs text-slate-500 font-medium">
+               {/* Breadcrumbs placeholder */}
+               <Link to="/" className="hover:text-slate-300">BitShell</Link>
+             </div>
+             <div className="hidden md:flex items-center gap-2">
+               <Globe size={14} className="text-slate-500"/>
+               <button onClick={() => setLang('zh')} className={`text-xs px-2 py-1 rounded transition-colors ${lang === 'zh' ? 'text-white bg-slate-800 font-bold' : 'text-slate-500 hover:text-slate-300'}`}>中文</button>
+               <span className="text-slate-700">/</span>
+               <button onClick={() => setLang('en')} className={`text-xs px-2 py-1 rounded transition-colors ${lang === 'en' ? 'text-white bg-slate-800 font-bold' : 'text-slate-500 hover:text-slate-300'}`}>EN</button>
+             </div>
+          </div>
+
+          <div className="p-4 md:p-12 max-w-6xl mx-auto relative z-10 w-full flex-grow">
+            <Routes>
+                <Route path="/" element={<LandingPage lang={lang} />} />
+                
+                {/* Tools Routes */}
+                <Route path="/tool/developer-logo-generator" element={<ToolRoute category="logoTools" />} />
+                <Route path="/tool/github-logo-generator" element={<ToolRoute category="logoTools" />} />
+                <Route path="/tool/open-source-logo-generator" element={<ToolRoute category="logoTools" />} />
+                <Route path="/tool/minimal-tech-logo" element={<ToolRoute category="logoTools" />} />
+                
+                <Route path="/tool/image-privacy-protection" element={<ToolRoute category="privacyTools" />} />
+                <Route path="/tool/exif-remover" element={<ToolRoute category="privacyTools" />} />
+                <Route path="/tool/remove-image-gps" element={<ToolRoute category="privacyTools" />} />
+                <Route path="/tool/image-privacy-check" element={<ToolRoute category="privacyTools" />} />
+
+                <Route path="/blog" element={<BlogEngine pageConfig={{category: 'resources', title: 'Blog', titleZh: '博客'}} lang={lang} />} />
+                
+                {/* Compliance Pages */}
+                <Route path="/privacy" element={<PrivacyPolicy lang={lang} />} />
+                <Route path="/about" element={<AboutPage lang={lang} />} />
+                <Route path="/contact" element={<ContactPage lang={lang} />} />
+            </Routes>
+          </div>
+
+          {/* Footer - AdSense Required */}
+          <footer className="border-t border-slate-800/50 mt-auto py-8 text-center bg-slate-900/50">
+              <div className="flex justify-center gap-6 mb-4 text-sm text-slate-400">
+                  <Link to="/about" className="hover:text-white transition-colors">{t.nav.about}</Link>
+                  <Link to="/privacy" className="hover:text-white transition-colors">{t.nav.privacy}</Link>
+                  <Link to="/contact" className="hover:text-white transition-colors">{t.nav.contact}</Link>
+              </div>
+              <p className="text-slate-600 text-sm">© 2026 {SEO_DATA.brand.name}. {t.brandDesc}</p>
+          </footer>
+        </main>
+      </div>
+    </BrowserRouter>
+    </HelmetProvider>
   );
 }
