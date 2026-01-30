@@ -391,7 +391,7 @@ const ContactPage = ({ lang }) => {
           <h3 className="text-xl font-bold text-white mb-2">{t.emailTitle}</h3>
           <p className="text-slate-400 mb-6">{t.emailDesc}</p>
           <a className="text-xl font-mono text-blue-400 bg-blue-400/10 px-6 py-3 rounded-lg hover:bg-blue-400/20 transition-colors">
-              jokong201695@outlook。com
+              jokong201695@outlook.com
           </a>
           <p className="text-xs text-slate-500 mt-6">{t.response}</p>
       </div>
